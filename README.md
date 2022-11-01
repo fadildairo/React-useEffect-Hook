@@ -115,3 +115,88 @@ function App() {
 
 export default App;
 ``` 
+The effect is cleaned up when the browser refreshes. But we can also set the effect to run only when the isOn variable changes. Only when one of the variables in the array changes, the effect will run during the update cycle i.e componentDidUpdate(). If you keep the array empty, the effect will only run on mount and unmount, because there is no variable to be checked for running the side-effect again:
+
+```javascript
+import React from 'react';
+
+function App() {
+  const [isOn, setIsOn] = React.useState(false);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => console.log('tick'), 1000);
+
+    return () => clearInterval(interval);
+  }, [isOn]); /*Here*/
+
+  ...
+}
+
+export default App;
+``` 
+With isOn added to the array, the interval keeps running whether isOn boolean is true or false. We want add a condition to only run the interval when the stopwatch is activated:
+
+```javascript
+import React from 'react';
+
+function App() {
+  const [isOn, setIsOn] = React.useState(false);
+
+  React.useEffect(() => {
+    let interval; /*Here*/
+
+    if (isOn) { /*Here*/
+      interval = setInterval(() => console.log('tick'), 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isOn]);
+
+  ...
+}
+
+export default App;
+``` 
+We can now introduce another state to keep track of the timer of the stopwatch. It is used to update the timer, but only when the stopwatch is activated:
+
+```javascript
+import React from 'react';
+
+function App() {
+  const [isOn, setIsOn] = React.useState(false);
+  const [timer, setTimer] = React.useState(0); /*Here*/
+
+  React.useEffect(() => {
+    let interval;
+
+    /*Here*/
+      interval = setInterval(
+        () => setTimer(timer+ 1), 
+        1000,
+      );
+    }
+
+    return () => clearInterval(interval);
+  }, [isOn]);
+
+  return (
+    <div>
+      {timer} {/*Here*/}
+
+      {!isOn && (
+        <button type="button" onClick={() => setIsOn(true)}>
+          Light On
+        </button>
+      )}
+
+      {isOn && (
+        <button type="button" onClick={() => setIsOn(false)}>
+          Light Off
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default App;
+``` 
