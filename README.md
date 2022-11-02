@@ -200,3 +200,114 @@ function App() {
 
 export default App;
 ``` 
+There is still a problem in the code. In order to always receive the latest state for the timer when the interval is running and not the stale state, we can use a functional update 'setTimer(t => t + 1)' since we only need 'timer' in the 'setTimer' call:
+
+```javascript
+import React from 'react';
+
+function App() {
+  const [isOn, setIsOn] = React.useState(false);
+  const [timer, setTimer] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval;
+
+    if (isOn) {
+      interval = setInterval(
+        () => setTimer(timer => timer + 1), /*Here*/ 
+        1000,
+      );
+    }
+
+    return () => clearInterval(interval);
+  }, [isOn]);
+
+  ...
+}
+
+export default App;
+``` 
+An alternative would have been to run the effect also when the timer changes. Then the effect would receive the latest timer state:
+
+```javascript
+import React from 'react';
+
+function App() {
+  const [isOn, setIsOn] = React.useState(false);
+  const [timer, setTimer] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval;
+
+    if (isOn) {
+      interval = setInterval(
+        () => setTimer(timer + 1),
+        1000,
+      );
+    }
+
+    return () => clearInterval(interval);
+  }, [isOn, timer]); /*Here*/ 
+
+  ...
+}
+
+export default App;
+``` 
+Tha Daa! Okay, that's the implementation for the stopwatch that uses the Browser API. We can also extend it by adding a "Reset" button:
+
+```javascript
+import React from 'react';
+
+function App() {
+  const [isOn, setIsOn] = React.useState(false);
+  const [timer, setTimer] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval;
+
+    if (isOn) {
+      interval = setInterval(
+        () => setTimer(timer => timer + 1),
+        1000,
+      );
+    }
+
+    return () => clearInterval(interval);
+  }, [isOn]);
+
+  /*Here*/
+  const onReset = () => {
+    setIsOn(false);
+    setTimer(0);
+  };
+
+  return (
+    <div>
+      {timer}
+
+      {!isOn && (
+        <button type="button" onClick={() => setIsOn(true)}>
+          Light On
+        </button>
+      )}
+
+      {isOn && (
+        <button type="button" onClick={() => setIsOn(false)}>
+          Light Off
+        </button>
+      )}
+
+      {/*Here*/}
+      <button type="button" disabled={timer === 0} onClick={onReset}>
+        Reset
+      </button>
+    </div>
+  );
+}
+
+export default App;
+``` 
+That's it. The useEffect hook is used for side-effects in React function components that are used for interacting with the Browser/DOM API or other third-party APIs (e.g. data fetching). You can read more about [the useEffect hook in React's documentation.](https://reactjs.org/docs/hooks-effect.html)
+
+Reference: https://www.robinwieruch.de/react-hooks/
